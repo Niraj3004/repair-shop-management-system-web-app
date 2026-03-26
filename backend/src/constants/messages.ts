@@ -1,0 +1,15 @@
+export const MESSAGES = {
+  REGISTER_SUCCESS: "Registration successful. Please verify OTP sent to email.",
+  LOGIN_SUCCESS: "Login successful",
+  INVALID_CREDENTIALS: "Invalid email or password",
+  USER_EXISTS: "User already exists",
+  USER_NOT_FOUND: "User not found",
+  OTP_SENT: "OTP sent to email",
+  OTP_INVALID: "Invalid OTP",
+  ACCOUNT_VERIFIED: "Account verified",
+  PASSWORD_RESET: "Password reset successfully",
+  TOKEN_NOT_PROVIDED: "Access token not provided",
+  INVALID_OR_EXPIRED_TOKEN: "Invalid or expired token",
+  INTERNAL_SERVER_ERROR: "Internal server error",
+  FORBIDDEN: "You do not have permission to perform this action",
+};
