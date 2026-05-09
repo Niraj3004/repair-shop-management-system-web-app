@@ -168,4 +168,54 @@ export const emailTemplates = {
     <br/>
     <p>If you have any questions, feel free to reply directly to this email or contact our support team.</p>`
   ),
+
+  adminNewPublicBooking: (adminName: string, customerName: string, trackingId: string, email: string, phone: string) => baseEmailTemplate(
+    "New Public Booking Request Pending Approval",
+    `<h2>New Public Booking Request! 📬</h2>
+    <p>Hello <strong>${adminName}</strong>,</p>
+    <p>A new public repair booking request has been submitted by <strong>${customerName}</strong> and is currently pending your approval.</p>
+    
+    <div class="highlight-box">
+      <p>Tracking ID</p>
+      <div class="tracking-id">${trackingId}</div>
+      <p>Customer Details</p>
+      <p style="margin:0; font-size:16px;"><strong>Email:</strong> ${email}</p>
+      <p style="margin:0; font-size:16px;"><strong>Phone:</strong> ${phone}</p>
+    </div>
+
+    <p>Please log in to your admin dashboard to review, approve, or reject this request.</p>
+    <div style="text-align: center;">
+      <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/admin/bookings" class="btn" style="color:#ffffff;">Go to Admin Dashboard</a>
+    </div>`
+  ),
+
+  customerBookingApproved: (name: string, trackingId: string, loginEmail: string, loginPass: string) => baseEmailTemplate(
+    "Your Repair Booking is Approved!",
+    `<h2>Repair Booking Approved! ✅</h2>
+    <p>Hello <strong>${name}</strong>,</p>
+    <p>Great news! Your repair booking request has been approved. We have created a secure account for you to track your repair progress.</p>
+    
+    <div class="highlight-box">
+      <p>Your Tracking ID</p>
+      <div class="tracking-id">${trackingId}</div>
+      <p>Your Account Credentials</p>
+      <p style="margin:0; font-size:16px;"><strong>Login ID:</strong> ${loginEmail}</p>
+      <p style="margin:0; font-size:16px;"><strong>Password:</strong> <span style="font-family: monospace; background:#e9ecef; padding:2px 6px; border-radius:4px;">${loginPass}</span></p>
+    </div>
+
+    <p>Please log in to your new client dashboard to view details and track your device.</p>
+    <div style="text-align: center;">
+      <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/login" class="btn" style="color:#ffffff;">Log In to Dashboard</a>
+    </div>
+    <p style="color: #6c757d; font-size: 14px;">For your security, we highly recommend changing your password after your first login.</p>`
+  ),
+
+  customerBookingRejected: (name: string, trackingId: string) => baseEmailTemplate(
+    "Update on Your Repair Booking Request",
+    `<h2>Booking Request Update</h2>
+    <p>Hello <strong>${name}</strong>,</p>
+    <p>Thank you for submitting a repair booking request (Tracking ID: <strong>${trackingId}</strong>).</p>
+    <p>Unfortunately, we are unable to process or approve your request at this time. This may be due to unavailable parts or a service we currently do not offer.</p>
+    <p>If you believe this is a mistake or would like more details, please contact our support team.</p>`
+  ),
 };

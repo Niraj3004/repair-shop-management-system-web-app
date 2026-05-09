@@ -83,4 +83,23 @@ router.route("/send-notification").post(
   adminController.sendCustomNotification
 );
 
+// Public Bookings Management
+router.route("/public-bookings").get(
+  authMiddleware,
+  authorizeRole("admin"),
+  adminController.getAllPublicBookings
+);
+
+router.route("/public-bookings/:id/approve").put(
+  authMiddleware,
+  authorizeRole("admin"),
+  adminController.approvePublicBooking
+);
+
+router.route("/public-bookings/:id/reject").put(
+  authMiddleware,
+  authorizeRole("admin"),
+  adminController.rejectPublicBooking
+);
+
 export default router;

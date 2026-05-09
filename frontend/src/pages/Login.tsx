@@ -47,7 +47,11 @@ export default function Login() {
       }
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Failed to login');
+      let errorMessage = error.response?.data?.message || 'Failed to login';
+      if (errorMessage === 'Invalid credentials') {
+        errorMessage = 'Wrong password or email. Please try again.';
+      }
+      toast.error(errorMessage);
     },
     onSettled: () => {
       setIsLoading(false);

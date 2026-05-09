@@ -106,3 +106,23 @@ export const getAllInvoices = catchAsyncError(
     res.status(STATUS_CODES.OK).json({ success: true, count: invoices.length, data: invoices });
   },
 );
+
+export const getAllPublicBookings = catchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
+  const status = req.query.status as string;
+  const bookings = await adminService.getAllPublicBookingsService(status);
+  res.status(STATUS_CODES.OK).json({ success: true, count: bookings.length, data: bookings });
+});
+
+export const approvePublicBooking = catchAsyncError(async (req: IExtendRequest, res: Response, next: NextFunction) => {
+  const id = req.params.id as string;
+  const adminId = req.user?._id?.toString() as string;
+  
+  const booking = await adminService.approvePublicBookingService(id, adminId);
+  res.status(STATUS_CODES.OK).json({ success: true, message: "Booking approved successfully", data: booking });
+});
+
+export const rejectPublicBooking = catchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
+  const id = req.params.id as string;
+  const booking = await adminService.rejectPublicBookingService(id);
+  res.status(STATUS_CODES.OK).json({ success: true, message: "Booking rejected successfully", data: booking });
+});

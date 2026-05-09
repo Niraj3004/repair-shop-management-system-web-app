@@ -17,9 +17,14 @@ export default function Home() {
               From cracked screens to battery replacements, our expert technicians fix your devices quickly with genuine parts.
             </p>
             <div className="flex flex-wrap gap-4 pt-4">
-              <Link to="/register">
+              <Link to="/public-booking">
                 <Button size="lg" className="bg-white text-blue-600 hover:bg-slate-100 font-semibold text-lg px-8">
-                  Book a Repair
+                  Book as Guest
+                </Button>
+              </Link>
+              <Link to="/register">
+                <Button size="lg" variant="outline" className="text-white border-white hover:bg-blue-700 font-semibold text-lg px-8">
+                  Create Account
                 </Button>
               </Link>
               <Link to="/track">

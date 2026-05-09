@@ -12,6 +12,7 @@ import VerifyOTP from '@/pages/VerifyOTP';
 import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
 import TrackRepair from '@/pages/TrackRepair';
+import PublicBooking from '@/pages/PublicBooking';
 
 // Client Dashboard Pages
 import Dashboard from '@/pages/dashboard/Dashboard';
@@ -33,6 +34,7 @@ import AdminInvoices from '@/pages/admin/Invoices';
 import SendNotification from '@/pages/admin/SendNotification';
 import APITestPage from '@/pages/admin/APITestPage';
 import WalkInBooking from '@/pages/admin/WalkInBooking';
+import AdminPublicBookings from '@/pages/admin/PublicBookings';
 
 // Layouts
 import PublicLayout from '@/layouts/PublicLayout';
@@ -66,6 +68,7 @@ export default function App() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/track" element={<TrackRepair />} />
+            <Route path="/public-booking" element={<PublicBooking />} />
           </Route>
 
           {/* Client Dashboard Routes */}
@@ -91,6 +94,7 @@ export default function App() {
             <Route path="/admin/send-notification" element={<SendNotification />} />
             <Route path="/admin/api-tester" element={<APITestPage />} />
             <Route path="/admin/walk-in-booking" element={<WalkInBooking />} />
+            <Route path="/admin/public-bookings" element={<AdminPublicBookings />} />
           </Route>
 
           {/* Fallback */}

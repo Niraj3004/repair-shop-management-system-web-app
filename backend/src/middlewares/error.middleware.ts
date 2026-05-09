@@ -11,9 +11,12 @@ export const errorHandler = (
   let error = { ...err };
   error.message = err.message;
 
-  // Log to console for dev
-  console.error("Error Status =>", err);
-
+  // Log to console for dev (don't print full stack trace for 4xx errors so it doesn't look like a crash)
+  if (err.statusCode && err.statusCode < 500) {
+    console.error(`[Client Error] ${err.statusCode} - ${err.message}`);
+  } else {
+    console.error("Error Status =>", err);
+  }
   // Mongoose bad ObjectId
   if (err.name === "CastError") {
     const message = `Resource not found with ID of ${err.value}`;

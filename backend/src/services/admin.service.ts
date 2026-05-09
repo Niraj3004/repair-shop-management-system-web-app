@@ -7,6 +7,9 @@ import { Notification } from "../models/notification.model";
 import Invoice from "../models/invoice.model";
 import RepairStatus from "../models/repairStatus.model";
 import fs from "fs";
+import PublicBooking from "../models/publicBooking.model";
+import { hashPassword } from "../utils/hash";
+import { createBookingService } from "./booking.service";
 
 export const getDashboardStatsService = async () => {
   const totalUsers = await User.countDocuments({ role: { $ne: 'admin' } });
@@ -177,4 +180,100 @@ export const getAllInvoicesService = async () => {
     .populate("booking", "trackingId deviceType deviceModel")
     .sort({ createdAt: -1 });
   return invoices;
+};
+
+export const getAllPublicBookingsService = async (status?: string) => {
+  const query: any = {};
+  if (status) {
+    query.status = status;
+  }
+  const bookings = await PublicBooking.find(query).sort({ createdAt: -1 });
+  return bookings;
+};
+
+export const approvePublicBookingService = async (id: string, adminId: string) => {
+  const publicBooking = await PublicBooking.findById(id);
+  if (!publicBooking) throw new Error("Public booking request not found");
+  
+  if (publicBooking.status !== "pending") {
+    throw new Error(`Booking is already ${publicBooking.status}`);
+  }
+
+  // 1. Mark as approved
+  publicBooking.status = "approved";
+  await publicBooking.save();
+
+  // 2. Check if user already exists
+  let user = await User.findOne({ email: publicBooking.email });
+  let generatedPassword = "";
+
+  if (!user) {
+    // Generate secure password
+    generatedPassword = Math.random().toString(36).slice(-8) + "A1!";
+    const hashedPassword = await hashPassword(generatedPassword);
+
+    user = await User.create({
+      firstName: publicBooking.firstName,
+      lastName: publicBooking.lastName,
+      email: publicBooking.email,
+      phone: publicBooking.phone,
+      currentAddress: publicBooking.address,
+      password: hashedPassword,
+      role: "client",
+      isVerified: true
+    });
+  }
+
+  // 3. Create actual booking
+  await createBookingService(
+    adminId,
+    publicBooking.deviceType || "Unknown",
+    publicBooking.deviceBrand || "Unknown",
+    publicBooking.deviceModel || "Unknown",
+    publicBooking.issueDescription || publicBooking.notes || "No description provided",
+    publicBooking.deviceImages || [], // images
+    {
+      firstName: publicBooking.firstName,
+      lastName: publicBooking.lastName,
+      email: publicBooking.email,
+      phone: publicBooking.phone
+    }
+  );
+
+  // 4. Send approval email with login credentials
+  const emailHtml = emailTemplates.customerBookingApproved(
+    user.firstName,
+    publicBooking.trackingId,
+    user.email,
+    generatedPassword || "(Your existing password)"
+  );
+
+  sendEmail(user.email, "Your Repair Booking is Approved!", emailHtml).catch(err => {
+    console.error("Failed to send approval email", err);
+  });
+
+  return publicBooking;
+};
+
+export const rejectPublicBookingService = async (id: string) => {
+  const publicBooking = await PublicBooking.findById(id);
+  if (!publicBooking) throw new Error("Public booking request not found");
+  
+  if (publicBooking.status !== "pending") {
+    throw new Error(`Booking is already ${publicBooking.status}`);
+  }
+
+  publicBooking.status = "rejected";
+  await publicBooking.save();
+
+  const emailHtml = emailTemplates.customerBookingRejected(
+    publicBooking.firstName,
+    publicBooking.trackingId
+  );
+
+  sendEmail(publicBooking.email, "Update on Your Repair Booking Request", emailHtml).catch(err => {
+    console.error("Failed to send rejection email", err);
+  });
+
+  return publicBooking;
 };

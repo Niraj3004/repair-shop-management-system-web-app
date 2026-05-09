@@ -16,7 +16,8 @@ import {
   ClipboardList,
   FileText,
   Send,
-  Terminal
+  Terminal,
+  Globe
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -52,6 +53,7 @@ export default function AdminLayout() {
   const navItems = [
     { name: 'Overview', path: '/admin', icon: <LayoutDashboard className="w-5 h-5" /> },
     { name: 'Bookings', path: '/admin/bookings', icon: <ClipboardList className="w-5 h-5" /> },
+    { name: 'Public Requests', path: '/admin/public-bookings', icon: <Globe className="w-5 h-5" /> },
     { name: 'Users', path: '/admin/users', icon: <Users className="w-5 h-5" /> },
     { name: 'Invoices', path: '/admin/invoices', icon: <FileText className="w-5 h-5" /> },
     { name: 'Walk-in Booking', path: '/admin/walk-in-booking', icon: <Wrench className="w-5 h-5" /> },
