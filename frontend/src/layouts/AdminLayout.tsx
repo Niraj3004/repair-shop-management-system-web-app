@@ -54,6 +54,7 @@ export default function AdminLayout() {
     { name: 'Bookings', path: '/admin/bookings', icon: <ClipboardList className="w-5 h-5" /> },
     { name: 'Users', path: '/admin/users', icon: <Users className="w-5 h-5" /> },
     { name: 'Invoices', path: '/admin/invoices', icon: <FileText className="w-5 h-5" /> },
+    { name: 'Walk-in Booking', path: '/admin/walk-in-booking', icon: <Wrench className="w-5 h-5" /> },
     { 
       name: 'Support Chat', 
       path: '/admin/support', 

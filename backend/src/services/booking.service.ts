@@ -40,12 +40,56 @@ export const createBookingService = async (
   deviceBrand: string,
   deviceModel: string,
   issueDescription: string,
-  deviceImages: string[] = []
+  deviceImages: string[] = [],
+  customerDetails?: {
+    firstName: string;
+    lastName?: string;
+    email?: string;
+    phone: string;
+  }
 ) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
   try {
+    let finalUserId = userId;
+    let isWalkIn = false;
+
+    if (customerDetails) {
+      isWalkIn = true;
+      // Admin creating booking for a walk-in customer
+      // Check if user exists by phone or email
+      const query: any = { 
+        $or: [{ phone: customerDetails.phone }] 
+      };
+      if (customerDetails.email) {
+        query.$or.push({ email: customerDetails.email });
+      }
+
+      let user = await User.findOne(query).session(session);
+
+      if (!user) {
+        // Create a new "shadow" user account
+        const userArray = await User.create(
+          [
+            {
+              firstName: customerDetails.firstName,
+              lastName: customerDetails.lastName || "",
+              email: customerDetails.email || `${customerDetails.phone}@wefixit.com`, // Fallback email
+              phone: customerDetails.phone,
+              role: "client",
+              isVerified: true,
+            },
+          ],
+          { session }
+        );
+        user = userArray[0] || null;
+      }
+      
+      if (!user) throw new Error("Failed to create or find customer account");
+      finalUserId = user._id.toString();
+    }
+
     // Generate professional tracking ID
     const trackingId = generateTrackingId();
 
@@ -53,7 +97,7 @@ export const createBookingService = async (
     const bookingArray = await Booking.create(
       [
         {
-          user: userId,
+          user: finalUserId,
           trackingId,
           deviceType,
           deviceBrand,
@@ -78,7 +122,7 @@ export const createBookingService = async (
         {
           bookingId: booking._id,
           status: REPAIR_STATUS.PENDING_DROP_OFF,
-          notes: "Booking created by client.",
+          notes: isWalkIn ? `Booking created by Admin for walk-in customer.` : "Booking created by client.",
           updatedBy: userId,
         },
       ],
@@ -90,8 +134,8 @@ export const createBookingService = async (
 
     // Send confirmation email asynchronously
     try {
-      const user = await User.findById(userId);
-      if (user && user.email) {
+      const user = await User.findById(finalUserId);
+      if (user && user.email && !user.email.endsWith("@wefixit.com")) {
         const emailHtml = emailTemplates.bookingCreatedEmail(
           user.firstName || "Client",
           trackingId,

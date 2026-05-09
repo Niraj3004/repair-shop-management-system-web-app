@@ -10,7 +10,14 @@ export const getTrackingTimelineService = async (
   trackingId: string,
   isAdmin: boolean = false,
 ) => {
-  const booking = await Booking.findOne({ trackingId });
+  let bookingQuery = Booking.findOne({ trackingId });
+
+  // If not admin, only return safe public fields
+  if (!isAdmin) {
+    bookingQuery = bookingQuery.select("trackingId deviceType deviceBrand deviceModel currentStatus createdAt");
+  }
+
+  const booking = await bookingQuery;
 
   if (!booking) {
     throw new Error("Tracking information not found");
@@ -21,7 +28,14 @@ export const getTrackingTimelineService = async (
     query.isInternal = { $ne: true };
   }
 
-  const timeline = await RepairStatus.find(query).sort({ createdAt: -1 });
+  let timelineQuery = RepairStatus.find(query).sort({ createdAt: -1 });
+
+  // If not admin, hide internal tracking details like who updated it
+  if (!isAdmin) {
+    timelineQuery = timelineQuery.select("-updatedBy -isInternal -bookingId -_id");
+  }
+
+  const timeline = await timelineQuery;
 
   return {
     booking,

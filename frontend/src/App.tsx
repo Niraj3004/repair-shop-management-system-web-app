@@ -32,6 +32,7 @@ import AdminSupport from '@/pages/admin/Support';
 import AdminInvoices from '@/pages/admin/Invoices';
 import SendNotification from '@/pages/admin/SendNotification';
 import APITestPage from '@/pages/admin/APITestPage';
+import WalkInBooking from '@/pages/admin/WalkInBooking';
 
 // Layouts
 import PublicLayout from '@/layouts/PublicLayout';
@@ -89,6 +90,7 @@ export default function App() {
             <Route path="/admin/invoices" element={<AdminInvoices />} />
             <Route path="/admin/send-notification" element={<SendNotification />} />
             <Route path="/admin/api-tester" element={<APITestPage />} />
+            <Route path="/admin/walk-in-booking" element={<WalkInBooking />} />
           </Route>
 
           {/* Fallback */}

@@ -22,17 +22,27 @@ export const downloadInvoice = catchAsyncError(async (req: IExtendRequest, res: 
 });
 
 export const createBooking = catchAsyncError(async (req: IExtendRequest, res: Response, next: NextFunction) => {
-  const { deviceType, deviceBrand, deviceModel, issueDescription } = req.body;
-  
+  const {
+    deviceType,
+    deviceBrand,
+    deviceModel,
+    issueDescription,
+    customerFirstName,
+    customerLastName,
+    customerEmail,
+    customerPhone
+  } = req.body;
+
   // AuthMiddleware ensures this is populated
   const userId = req.user?._id.toString() as string;
+  const userRole = req.user?.role;
 
   const files = req.files as Express.Multer.File[];
   const imageUrls: string[] = [];
 
   if (files && files.length > 0) {
     for (const file of files) {
-      if (process.env.CLOUDINARY_API_KEY === "your_api_key") {
+      if (process.env.CLOUDINARY_API_KEY === "your_api_key" || !process.env.CLOUDINARY_API_KEY) {
         // Fallback for local development without Cloudinary
         console.log("Cloudinary not configured, using placeholder image.");
         imageUrls.push(`https://res.cloudinary.com/demo/image/upload/v1312461204/sample.jpg`);
@@ -47,13 +57,25 @@ export const createBooking = catchAsyncError(async (req: IExtendRequest, res: Re
     }
   }
 
+  // Handle Admin creating booking for walk-in customer
+  let customerDetails = undefined;
+  if (userRole === 'admin' && customerPhone) {
+    customerDetails = {
+      firstName: customerFirstName,
+      lastName: customerLastName,
+      email: customerEmail,
+      phone: customerPhone
+    };
+  }
+
   const booking = await bookingService.createBookingService(
     userId,
     deviceType,
     deviceBrand,
     deviceModel,
     issueDescription,
-    imageUrls
+    imageUrls,
+    customerDetails
   );
 
   res.status(STATUS_CODES.CREATED).json({
