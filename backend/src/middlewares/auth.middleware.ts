@@ -81,6 +81,45 @@ class AuthMiddleware {
       });
     }
   }
+  static async isOptionalAuthenticated(
+    req: IExtendRequest,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    try {
+      const authHeader = req.headers.authorization;
+
+      if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        return next();
+      }
+
+      const token = authHeader.split(" ")[1]!;
+      const decoded = verifyToken(token);
+
+      if (!decoded || typeof decoded === "string") {
+        return next();
+      }
+
+      let userId = decoded.id;
+
+      if (!userId && decoded.role === ROLES.ADMIN) {
+        const adminDoc = await User.findOne({ email: decoded.email, role: ROLES.ADMIN });
+        if (adminDoc) {
+          userId = adminDoc._id.toString();
+        }
+      }
+
+      if (userId) {
+        const user = await User.findById(userId);
+        if (user) {
+          req.user = user;
+        }
+      }
+      next();
+    } catch (error) {
+      next();
+    }
+  }
 }
 
 export default AuthMiddleware;

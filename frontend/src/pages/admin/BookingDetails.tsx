@@ -25,12 +25,18 @@ interface Booking {
   price?: number;
   deviceImages?: string[];
   createdAt: string;
-  user: {
+  user?: {
     firstName: string;
     lastName: string;
     email: string;
     phone: string;
   };
+  isGuest?: boolean;
+  customerFirstName?: string;
+  customerLastName?: string;
+  customerEmail?: string;
+  customerPhone?: string;
+  customerAddress?: string;
   timeline?: {
     status: string;
     notes: string;
@@ -250,6 +256,7 @@ export default function AdminBookingDetails() {
                         <SelectValue placeholder="Select status" />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="Pending Approval">Pending Approval</SelectItem>
                         <SelectItem value="Pending Drop-off">Pending Drop-off</SelectItem>
                         <SelectItem value="Diagnosing">Diagnosing</SelectItem>
                         <SelectItem value="Waiting for Parts">Waiting for Parts</SelectItem>
@@ -322,16 +329,25 @@ export default function AdminBookingDetails() {
             <CardContent className="space-y-4">
               <div>
                 <p className="text-sm text-slate-500">Name</p>
-                <p className="font-medium">{booking.user.firstName} {booking.user.lastName}</p>
+                <p className="font-medium flex items-center gap-2">
+                  {booking.isGuest ? `${booking.customerFirstName} ${booking.customerLastName || ''}` : `${booking.user?.firstName || ''} ${booking.user?.lastName || ''}`}
+                  {booking.isGuest && <Badge variant="outline" className="bg-pink-50 text-pink-600 border-pink-200 text-[10px] px-1.5">Guest</Badge>}
+                </p>
               </div>
               <div>
                 <p className="text-sm text-slate-500">Email</p>
-                <p className="font-medium">{booking.user.email}</p>
+                <p className="font-medium">{booking.isGuest ? booking.customerEmail : booking.user?.email}</p>
               </div>
               <div>
                 <p className="text-sm text-slate-500">Phone</p>
-                <p className="font-medium">{booking.user.phone}</p>
+                <p className="font-medium">{booking.isGuest ? booking.customerPhone : booking.user?.phone}</p>
               </div>
+              {booking.isGuest && booking.customerAddress && (
+                <div>
+                  <p className="text-sm text-slate-500">Address</p>
+                  <p className="font-medium">{booking.customerAddress}</p>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -347,6 +363,7 @@ export default function AdminBookingDetails() {
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="Pending Approval">Pending Approval</SelectItem>
                     <SelectItem value="Pending Drop-off">Pending Drop-off</SelectItem>
                     <SelectItem value="Diagnosing">Diagnosing</SelectItem>
                     <SelectItem value="Waiting for Parts">Waiting for Parts</SelectItem>

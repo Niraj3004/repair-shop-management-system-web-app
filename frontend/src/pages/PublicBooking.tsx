@@ -49,7 +49,7 @@ export default function PublicBooking() {
         formData.append('images', image);
       });
 
-      const response = await api.post('/public-bookings', formData, {
+      const response = await api.post('/booking', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -114,26 +114,26 @@ export default function PublicBooking() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="firstName">First Name <span className="text-red-500">*</span></Label>
-                    <Input id="firstName" name="firstName" required placeholder="John" />
+                    <Input id="firstName" name="customerFirstName" required placeholder="John" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="lastName">Last Name <span className="text-red-500">*</span></Label>
-                    <Input id="lastName" name="lastName" required placeholder="Doe" />
+                    <Input id="lastName" name="customerLastName" required placeholder="Doe" />
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="email">Email Address <span className="text-red-500">*</span></Label>
-                    <Input id="email" name="email" type="email" required placeholder="john@example.com" />
+                    <Input id="email" name="customerEmail" type="email" required placeholder="john@example.com" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="phone">Phone Number <span className="text-red-500">*</span></Label>
-                    <Input id="phone" name="phone" required placeholder="+977 98..." />
+                    <Input id="phone" name="customerPhone" required placeholder="+977 98..." />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="address">Address <span className="text-red-500">*</span></Label>
-                  <Input id="address" name="address" required placeholder="Kathmandu, Nepal" />
+                  <Input id="address" name="customerAddress" required placeholder="Kathmandu, Nepal" />
                 </div>
               </div>
 
@@ -147,16 +147,16 @@ export default function PublicBooking() {
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="deviceType">Device Type</Label>
-                    <Input id="deviceType" name="deviceType" placeholder="Phone, Laptop..." />
+                    <Label htmlFor="deviceType">Device Type <span className="text-red-500">*</span></Label>
+                    <Input id="deviceType" name="deviceType" required placeholder="Phone, Laptop..." />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="deviceBrand">Brand</Label>
-                    <Input id="deviceBrand" name="deviceBrand" placeholder="Apple, Samsung..." />
+                    <Label htmlFor="deviceBrand">Brand <span className="text-red-500">*</span></Label>
+                    <Input id="deviceBrand" name="deviceBrand" required placeholder="Apple, Samsung..." />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="deviceModel">Model</Label>
-                    <Input id="deviceModel" name="deviceModel" placeholder="iPhone 13 Pro" />
+                    <Label htmlFor="deviceModel">Model <span className="text-red-500">*</span></Label>
+                    <Input id="deviceModel" name="deviceModel" required placeholder="iPhone 13 Pro" />
                   </div>
                 </div>
                 

@@ -30,11 +30,12 @@ export const createBooking = catchAsyncError(async (req: IExtendRequest, res: Re
     customerFirstName,
     customerLastName,
     customerEmail,
-    customerPhone
+    customerPhone,
+    customerAddress
   } = req.body;
 
-  // AuthMiddleware ensures this is populated
-  const userId = req.user?._id.toString() as string;
+  // Optional Authentication
+  const userId = req.user?._id?.toString();
   const userRole = req.user?.role;
 
   const files = req.files as Express.Multer.File[];
@@ -57,14 +58,14 @@ export const createBooking = catchAsyncError(async (req: IExtendRequest, res: Re
     }
   }
 
-  // Handle Admin creating booking for walk-in customer
   let customerDetails = undefined;
-  if (userRole === 'admin' && customerPhone) {
+  if (!userId || (userRole === 'admin' && customerPhone)) {
     customerDetails = {
       firstName: customerFirstName,
       lastName: customerLastName,
       email: customerEmail,
-      phone: customerPhone
+      phone: customerPhone,
+      address: customerAddress
     };
   }
 

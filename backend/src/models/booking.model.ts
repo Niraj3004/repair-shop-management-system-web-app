@@ -2,7 +2,13 @@ import mongoose, { Schema, Document } from "mongoose";
 import { REPAIR_STATUS } from "../constants/status";
 
 export interface IBooking extends Document {
-  user: mongoose.Types.ObjectId;
+  user?: mongoose.Types.ObjectId;
+  isGuest: boolean;
+  customerFirstName?: string;
+  customerLastName?: string;
+  customerEmail?: string;
+  customerPhone?: string;
+  customerAddress?: string;
   trackingId: string;
   deviceType: string;
   deviceBrand: string;
@@ -17,7 +23,13 @@ export interface IBooking extends Document {
 
 const bookingSchema = new Schema<IBooking>(
   {
-    user: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    user: { type: Schema.Types.ObjectId, ref: "User", required: false },
+    isGuest: { type: Boolean, default: false },
+    customerFirstName: { type: String },
+    customerLastName: { type: String },
+    customerEmail: { type: String },
+    customerPhone: { type: String },
+    customerAddress: { type: String },
     trackingId: { type: String, required: true, unique: true, index: true },
     deviceType: { type: String, required: true },
     deviceBrand: { type: String, required: true },

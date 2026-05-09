@@ -1,5 +1,6 @@
 export const REPAIR_STATUS = {
   PENDING_DROP_OFF: "Pending Drop-off",
+  PENDING_APPROVAL: "Pending Approval",
   DIAGNOSING: "Diagnosing",
   WAITING_FOR_PARTS: "Waiting for Parts",
   IN_PROGRESS: "In Progress",

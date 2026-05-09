@@ -35,17 +35,18 @@ export const downloadInvoiceService = async (bookingId: string, userId: string) 
 };
 
 export const createBookingService = async (
-  userId: string,
+  userId: string | undefined,
   deviceType: string,
   deviceBrand: string,
   deviceModel: string,
   issueDescription: string,
   deviceImages: string[] = [],
   customerDetails?: {
-    firstName: string;
+    firstName?: string;
     lastName?: string;
     email?: string;
-    phone: string;
+    phone?: string;
+    address?: string;
   }
 ) => {
   const session = await mongoose.startSession();
@@ -54,11 +55,13 @@ export const createBookingService = async (
   try {
     let finalUserId = userId;
     let isWalkIn = false;
+    let isGuest = false;
 
-    if (customerDetails) {
+    if (!userId && customerDetails) {
+      isGuest = true;
+    } else if (userId && customerDetails) {
       isWalkIn = true;
-      // Admin creating booking for a walk-in customer
-      // Check if user exists by phone or email
+      // Admin creating booking for a walk-in customer -> Create shadow account immediately
       const query: any = { 
         $or: [{ phone: customerDetails.phone }] 
       };
@@ -69,14 +72,14 @@ export const createBookingService = async (
       let user = await User.findOne(query).session(session);
 
       if (!user) {
-        // Create a new "shadow" user account
         const userArray = await User.create(
           [
             {
-              firstName: customerDetails.firstName,
+              firstName: customerDetails.firstName || "Walk-In",
               lastName: customerDetails.lastName || "",
-              email: customerDetails.email || `${customerDetails.phone}@wefixit.com`, // Fallback email
-              phone: customerDetails.phone,
+              email: customerDetails.email || `${customerDetails.phone}@wefixit.com`,
+              phone: customerDetails.phone || "",
+              currentAddress: customerDetails.address || "",
               role: "client",
               isVerified: true,
             },
@@ -90,25 +93,32 @@ export const createBookingService = async (
       finalUserId = user._id.toString();
     }
 
-    // Generate professional tracking ID
     const trackingId = generateTrackingId();
 
-    // Create main booking
-    const bookingArray = await Booking.create(
-      [
-        {
-          user: finalUserId,
-          trackingId,
-          deviceType,
-          deviceBrand,
-          deviceModel,
-          issueDescription,
-          deviceImages,
-          currentStatus: REPAIR_STATUS.PENDING_DROP_OFF,
-        },
-      ],
-      { session }
-    );
+    const bookingPayload: any = {
+      trackingId,
+      deviceType,
+      deviceBrand,
+      deviceModel,
+      issueDescription,
+      deviceImages,
+      currentStatus: isGuest ? REPAIR_STATUS.PENDING_APPROVAL : REPAIR_STATUS.PENDING_DROP_OFF,
+      isGuest,
+    };
+
+    if (finalUserId) {
+      bookingPayload.user = finalUserId;
+    }
+
+    if (isGuest && customerDetails) {
+      bookingPayload.customerFirstName = customerDetails.firstName;
+      bookingPayload.customerLastName = customerDetails.lastName;
+      bookingPayload.customerEmail = customerDetails.email;
+      bookingPayload.customerPhone = customerDetails.phone;
+      bookingPayload.customerAddress = customerDetails.address;
+    }
+
+    const bookingArray = await Booking.create([bookingPayload], { session });
 
     const booking = bookingArray[0];
 
@@ -123,7 +133,7 @@ export const createBookingService = async (
           bookingId: booking._id,
           status: REPAIR_STATUS.PENDING_DROP_OFF,
           notes: isWalkIn ? `Booking created by Admin for walk-in customer.` : "Booking created by client.",
-          updatedBy: userId,
+          updatedBy: userId || "Guest",
         },
       ],
       { session }
@@ -132,21 +142,41 @@ export const createBookingService = async (
     await session.commitTransaction();
     session.endSession();
 
-    // Send confirmation email asynchronously
-    try {
-      const user = await User.findById(finalUserId);
-      if (user && user.email && !user.email.endsWith("@wefixit.com")) {
-        const emailHtml = emailTemplates.bookingCreatedEmail(
-          user.firstName || "Client",
+    // Send emails asynchronously
+    if (isGuest && customerDetails) {
+      // 1. Send guest notification to Admin
+      try {
+        const adminEmail = process.env.ADMIN_EMAIL || "admin@repair.com";
+        const emailHtml = emailTemplates.adminNewPublicBooking(
+          "Admin", // Provide adminName
+          customerDetails.firstName || "Guest",
           trackingId,
-          `${deviceType} - ${deviceModel}`
+          customerDetails.email || "N/A",
+          customerDetails.phone || "N/A"
         );
-        sendEmail(user.email, "Repair Booking Confirmed - WeFixIt", emailHtml).catch(
-            (err: any) => console.error("Failed to send booking confirmation email:", err)
+        sendEmail(adminEmail, "New Public Repair Request - WeFixIt", emailHtml).catch((err: any) =>
+          console.error("Failed to send admin notification email:", err)
         );
+      } catch (err) {
+        console.error("Failed to fetch admin email: ", err);
       }
-    } catch(err) {
-      console.error("Failed to fetch user for email confirmation: ", err)
+    } else if (finalUserId) {
+      // 2. Send confirmation to registered user/walk-in
+      try {
+        const user = await User.findById(finalUserId);
+        if (user && user.email && !user.email.endsWith("@wefixit.com")) {
+          const emailHtml = emailTemplates.bookingCreatedEmail(
+            user.firstName || "Client",
+            trackingId,
+            `${deviceType} - ${deviceModel}`
+          );
+          sendEmail(user.email, "Repair Booking Confirmed - WeFixIt", emailHtml).catch((err: any) =>
+            console.error("Failed to send booking confirmation email:", err)
+          );
+        }
+      } catch (err) {
+        console.error("Failed to fetch user for email confirmation: ", err);
+      }
     }
 
     return booking;

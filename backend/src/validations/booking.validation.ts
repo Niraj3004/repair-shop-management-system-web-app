@@ -11,6 +11,7 @@ export const createBookingSchema = z.object({
     customerLastName: z.string().optional(),
     customerEmail: z.string().email("Invalid email").or(z.literal("")).optional(),
     customerPhone: z.string().optional(),
+    customerAddress: z.string().optional(),
   }),
 });
 

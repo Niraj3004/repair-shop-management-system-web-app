@@ -7,7 +7,7 @@ import { Notification } from "../models/notification.model";
 import Invoice from "../models/invoice.model";
 import RepairStatus from "../models/repairStatus.model";
 import fs from "fs";
-import PublicBooking from "../models/publicBooking.model";
+
 import { hashPassword } from "../utils/hash";
 import { createBookingService } from "./booking.service";
 
@@ -182,29 +182,17 @@ export const getAllInvoicesService = async () => {
   return invoices;
 };
 
-export const getAllPublicBookingsService = async (status?: string) => {
-  const query: any = {};
-  if (status) {
-    query.status = status;
-  }
-  const bookings = await PublicBooking.find(query).sort({ createdAt: -1 });
-  return bookings;
-};
-
-export const approvePublicBookingService = async (id: string, adminId: string) => {
-  const publicBooking = await PublicBooking.findById(id);
-  if (!publicBooking) throw new Error("Public booking request not found");
+export const approveGuestBookingService = async (id: string, adminId: string) => {
+  const booking = await Booking.findById(id);
   
-  if (publicBooking.status !== "pending") {
-    throw new Error(`Booking is already ${publicBooking.status}`);
-  }
+  if (!booking) throw new Error("Booking not found");
+  if (!booking.isGuest) throw new Error("This booking is already associated with a registered user.");
+  
+  const email = booking.customerEmail;
+  if (!email) throw new Error("Guest booking has no email address. Cannot auto-create account.");
 
-  // 1. Mark as approved
-  publicBooking.status = "approved";
-  await publicBooking.save();
-
-  // 2. Check if user already exists
-  let user = await User.findOne({ email: publicBooking.email });
+  // Check if user already exists
+  let user = await User.findOne({ email });
   let generatedPassword = "";
 
   if (!user) {
@@ -213,37 +201,40 @@ export const approvePublicBookingService = async (id: string, adminId: string) =
     const hashedPassword = await hashPassword(generatedPassword);
 
     user = await User.create({
-      firstName: publicBooking.firstName,
-      lastName: publicBooking.lastName,
-      email: publicBooking.email,
-      phone: publicBooking.phone,
-      currentAddress: publicBooking.address,
+      firstName: booking.customerFirstName || "Client",
+      lastName: booking.customerLastName || "",
+      email: email,
+      phone: booking.customerPhone || "",
+      currentAddress: booking.customerAddress || "",
       password: hashedPassword,
       role: "client",
       isVerified: true
     });
+    console.log(`[Guest Booking] Auto-created user ${user.email} with password: ${generatedPassword}`);
   }
 
-  // 3. Create actual booking
-  await createBookingService(
-    adminId,
-    publicBooking.deviceType || "Unknown",
-    publicBooking.deviceBrand || "Unknown",
-    publicBooking.deviceModel || "Unknown",
-    publicBooking.issueDescription || publicBooking.notes || "No description provided",
-    publicBooking.deviceImages || [], // images
-    {
-      firstName: publicBooking.firstName,
-      lastName: publicBooking.lastName,
-      email: publicBooking.email,
-      phone: publicBooking.phone
-    }
-  );
+  // Update booking
+  booking.user = user._id as any;
+  booking.isGuest = false;
+  booking.currentStatus = REPAIR_STATUS.PENDING_DROP_OFF;
+  
+  // Optionally clean up guest fields now that they are in the User model,
+  // but it's fine to keep them for historical record.
+  
+  await booking.save();
 
-  // 4. Send approval email with login credentials
+  // Create timeline entry for approval
+  await RepairStatus.create({
+    bookingId: booking._id,
+    status: REPAIR_STATUS.PENDING_DROP_OFF,
+    notes: `Guest booking approved and account linked.`,
+    updatedBy: adminId,
+  });
+
+  // Send approval email with login credentials
   const emailHtml = emailTemplates.customerBookingApproved(
     user.firstName,
-    publicBooking.trackingId,
+    booking.trackingId,
     user.email,
     generatedPassword || "(Your existing password)"
   );
@@ -252,28 +243,5 @@ export const approvePublicBookingService = async (id: string, adminId: string) =
     console.error("Failed to send approval email", err);
   });
 
-  return publicBooking;
-};
-
-export const rejectPublicBookingService = async (id: string) => {
-  const publicBooking = await PublicBooking.findById(id);
-  if (!publicBooking) throw new Error("Public booking request not found");
-  
-  if (publicBooking.status !== "pending") {
-    throw new Error(`Booking is already ${publicBooking.status}`);
-  }
-
-  publicBooking.status = "rejected";
-  await publicBooking.save();
-
-  const emailHtml = emailTemplates.customerBookingRejected(
-    publicBooking.firstName,
-    publicBooking.trackingId
-  );
-
-  sendEmail(publicBooking.email, "Update on Your Repair Booking Request", emailHtml).catch(err => {
-    console.error("Failed to send rejection email", err);
-  });
-
-  return publicBooking;
+  return booking;
 };

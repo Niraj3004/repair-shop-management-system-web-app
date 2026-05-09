@@ -14,7 +14,7 @@ export const getTrackingTimelineService = async (
 
   // If not admin, only return safe public fields
   if (!isAdmin) {
-    bookingQuery = bookingQuery.select("trackingId deviceType deviceBrand deviceModel currentStatus createdAt user")
+    bookingQuery = bookingQuery.select("trackingId deviceType deviceBrand deviceModel currentStatus createdAt user isGuest customerFirstName customerLastName customerEmail customerPhone")
                                .populate("user", "firstName lastName email phone");
   } else {
     bookingQuery = bookingQuery.populate("user", "firstName lastName email phone currentAddress");

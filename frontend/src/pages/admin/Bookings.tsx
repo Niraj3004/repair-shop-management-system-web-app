@@ -20,11 +20,15 @@ import { format } from 'date-fns';
 interface Booking {
   _id: string;
   trackingId: string;
-  user: {
+  user?: {
     firstName: string;
     lastName: string;
     email: string;
   };
+  isGuest?: boolean;
+  customerFirstName?: string;
+  customerLastName?: string;
+  customerEmail?: string;
   deviceType: string;
   deviceBrand: string;
   deviceModel: string;
@@ -33,6 +37,7 @@ interface Booking {
 }
 
 const statusColors: Record<string, string> = {
+  'Pending Approval': 'bg-pink-100 text-pink-800',
   'Pending Drop-off': 'bg-yellow-100 text-yellow-800',
   'Diagnosing': 'bg-blue-100 text-blue-800',
   'Waiting for Parts': 'bg-orange-100 text-orange-800',
@@ -55,10 +60,13 @@ export default function AdminBookings() {
   });
 
   const filteredBookings = bookings?.filter(booking => {
+    const custFirst = booking.isGuest ? (booking.customerFirstName || '') : (booking.user?.firstName || '');
+    const custLast = booking.isGuest ? (booking.customerLastName || '') : (booking.user?.lastName || '');
+    
     const matchesSearch = 
       booking.trackingId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      booking.user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      booking.user.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      custFirst.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      custLast.toLowerCase().includes(searchTerm.toLowerCase()) ||
       booking.deviceModel.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStatus = statusFilter === 'All' || booking.currentStatus === statusFilter;
@@ -94,6 +102,7 @@ export default function AdminBookings() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="All">All Statuses</SelectItem>
+              <SelectItem value="Pending Approval">Pending Approval</SelectItem>
               <SelectItem value="Pending Drop-off">Pending Drop-off</SelectItem>
               <SelectItem value="Diagnosing">Diagnosing</SelectItem>
               <SelectItem value="Waiting for Parts">Waiting for Parts</SelectItem>
@@ -141,8 +150,13 @@ export default function AdminBookings() {
                   </TableCell>
                   <TableCell>
                     <div>
-                      <p className="font-medium">{booking.user.firstName} {booking.user.lastName}</p>
-                      <p className="text-xs text-slate-500">{booking.user.email}</p>
+                      <p className="font-medium flex items-center gap-2">
+                        {booking.isGuest ? `${booking.customerFirstName} ${booking.customerLastName || ''}` : `${booking.user?.firstName || ''} ${booking.user?.lastName || ''}`}
+                        {booking.isGuest && <Badge variant="outline" className="bg-pink-50 text-pink-600 border-pink-200 text-[10px] px-1.5">Guest</Badge>}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        {booking.isGuest ? booking.customerEmail : booking.user?.email}
+                      </p>
                     </div>
                   </TableCell>
                   <TableCell>
@@ -160,13 +174,36 @@ export default function AdminBookings() {
                     {format(new Date(booking.createdAt), 'MMM d, yyyy')}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Link 
-                      to={`/admin/bookings/${booking._id}`}
-                      className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2 ghost"
-                    >
-                      <Eye className="w-4 h-4 mr-2" />
-                      View
-                    </Link>
+                    <div className="flex items-center justify-end gap-2">
+                      {booking.isGuest && booking.currentStatus === 'Pending Approval' && (
+                        <Button 
+                          size="sm" 
+                          variant="default"
+                          className="bg-green-600 hover:bg-green-700"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (window.confirm('Approve guest booking? This will create an account for them and send their login credentials.')) {
+                              api.put(`/admin/guest-bookings/${booking._id}/approve`)
+                                .then(() => {
+                                  toast.success('Guest booking approved!');
+                                  window.location.reload();
+                                })
+                                .catch(err => toast.error(err.response?.data?.message || 'Failed to approve'));
+                            }
+                          }}
+                        >
+                          Approve
+                        </Button>
+                      )}
+                      <Link 
+                        to={`/admin/bookings/${booking._id}`}
+                        className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-slate-100 hover:text-slate-900 h-9 px-4 py-2"
+                      >
+                        <Eye className="w-4 h-4 mr-2" />
+                        View
+                      </Link>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))
