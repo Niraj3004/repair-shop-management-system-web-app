@@ -53,6 +53,7 @@ export default function ClientLayout() {
     { name: 'My Repairs', path: '/dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
     { name: 'Book a Repair', path: '/dashboard/book-repair', icon: <PlusCircle className="w-5 h-5" /> },
     { name: 'Invoices', path: '/dashboard/invoices', icon: <FileText className="w-5 h-5" /> },
+    { name: 'Leave a Review', path: '/dashboard/testimonials', icon: <MessageSquare className="w-5 h-5" /> },
     { name: 'AI Assistant', path: '/dashboard/ai-assistant', icon: <Bot className="w-5 h-5" /> },
     { name: 'Notifications', path: '/dashboard/notifications', icon: <Bell className="w-5 h-5" /> },
     { 

@@ -1,4 +1,5 @@
 import User from "../models/user.model";
+import Booking from "../models/booking.model";
 import { hashPassword, comparePassword } from "../utils/hash";
 import { generateToken } from "../utils/jwt";
 import { generateOTP } from "../utils/tokens";
@@ -91,6 +92,14 @@ export const verifyOtpService = async (
   user.otp = undefined;
 
   await user.save();
+
+  // Link guest bookings
+  if (user.email) {
+    await Booking.updateMany(
+      { customerEmail: user.email, isGuest: true, user: { $exists: false } },
+      { $set: { user: user._id, isGuest: false } }
+    );
+  }
 
   await sendEmail(
     user.email,

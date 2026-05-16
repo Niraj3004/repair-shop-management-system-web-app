@@ -1,9 +1,21 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Smartphone, Laptop, Tablet, ShieldCheck, Clock, Wrench } from 'lucide-react';
+import { ArrowRight, Smartphone, Laptop, Tablet, ShieldCheck, Clock, Wrench, Star, MessageSquare } from 'lucide-react';
 import ChatbotWidget from '@/components/ChatbotWidget';
+import { useQuery } from '@tanstack/react-query';
+import { api } from '@/lib/api';
 
 export default function Home() {
+  const { data: testimonialsResponse } = useQuery({
+    queryKey: ['approved-testimonials'],
+    queryFn: async () => {
+      const res = await api.get('/testimonials');
+      return res.data;
+    },
+  });
+
+  const testimonials = testimonialsResponse?.data || [];
+
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
@@ -94,6 +106,47 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Testimonials */}
+      {testimonials.length > 0 && (
+        <section className="py-20 px-4 bg-slate-50 border-t border-slate-200">
+          <div className="container mx-auto max-w-6xl">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl font-bold text-slate-900 mb-4">What Our Customers Say</h2>
+              <p className="text-slate-600 max-w-2xl mx-auto">Don't just take our word for it - hear from our satisfied customers.</p>
+            </div>
+            
+            <div className="grid md:grid-cols-3 gap-8">
+              {testimonials.slice(0, 3).map((testimonial: any) => (
+                <div key={testimonial._id} className="p-6 bg-white rounded-2xl border border-slate-200 shadow-sm">
+                  <div className="flex items-center gap-1 mb-4">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star
+                        key={star}
+                        className={`w-5 h-5 ${star <= testimonial.rating ? 'fill-yellow-400 text-yellow-400' : 'text-slate-300'}`}
+                      />
+                    ))}
+                  </div>
+                  <p className="text-slate-700 mb-6 relative z-10">"{testimonial.message}"</p>
+                  <div className="flex items-center gap-3">
+                    {testimonial.profileImage ? (
+                      <img src={testimonial.profileImage} alt={testimonial.name} className="w-10 h-10 rounded-full object-cover" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold uppercase">
+                        {testimonial.name.charAt(0)}
+                      </div>
+                    )}
+                    <div>
+                      <h4 className="font-semibold text-slate-900">{testimonial.name}</h4>
+                      <p className="text-xs text-slate-500">{new Date(testimonial.createdAt).toLocaleDateString()}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       <ChatbotWidget />
     </div>

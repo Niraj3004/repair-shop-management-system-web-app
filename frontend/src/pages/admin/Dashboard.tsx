@@ -4,6 +4,7 @@ import { api } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, ClipboardList, CheckCircle2, DollarSign, Clock } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { formatDistanceToNow } from 'date-fns';
 
 interface DashboardStats {
   totalUsers: number;
@@ -11,6 +12,8 @@ interface DashboardStats {
   pendingBookings: number;
   completedBookings: number;
   totalRevenue: number;
+  recentBookings: any[];
+  chartData: any[];
 }
 
 export default function AdminDashboard() {
@@ -22,16 +25,7 @@ export default function AdminDashboard() {
     },
   });
 
-  // Mock data for the chart since backend doesn't provide time-series data yet
-  const chartData = [
-    { name: 'Mon', bookings: 4 },
-    { name: 'Tue', bookings: 7 },
-    { name: 'Wed', bookings: 5 },
-    { name: 'Thu', bookings: 10 },
-    { name: 'Fri', bookings: 8 },
-    { name: 'Sat', bookings: 12 },
-    { name: 'Sun', bookings: 6 },
-  ];
+  const chartData = stats?.chartData || [];
 
   if (isLoading) {
     return (
@@ -112,38 +106,37 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-8">
-              {/* Placeholder for recent activity feed */}
-              <div className="flex items-center">
-                <span className="relative flex h-2 w-2 mr-4">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-                </span>
-                <div className="space-y-1">
-                  <p className="text-sm font-medium leading-none">New booking received</p>
-                  <p className="text-sm text-slate-500">iPhone 13 Pro - Screen Replacement</p>
-                </div>
-                <div className="ml-auto font-medium text-sm text-slate-500">Just now</div>
-              </div>
-              <div className="flex items-center">
-                <span className="relative flex h-2 w-2 mr-4">
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                </span>
-                <div className="space-y-1">
-                  <p className="text-sm font-medium leading-none">Payment verified</p>
-                  <p className="text-sm text-slate-500">Booking WFX-10293</p>
-                </div>
-                <div className="ml-auto font-medium text-sm text-slate-500">2h ago</div>
-              </div>
-              <div className="flex items-center">
-                <span className="relative flex h-2 w-2 mr-4">
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-yellow-500"></span>
-                </span>
-                <div className="space-y-1">
-                  <p className="text-sm font-medium leading-none">Status updated</p>
-                  <p className="text-sm text-slate-500">MacBook Pro - Diagnosing</p>
-                </div>
-                <div className="ml-auto font-medium text-sm text-slate-500">5h ago</div>
-              </div>
+              {stats?.recentBookings && stats.recentBookings.length > 0 ? (
+                stats.recentBookings.map((booking) => (
+                  <div key={booking._id} className="flex items-center">
+                    <span className="relative flex h-2 w-2 mr-4">
+                      {booking.currentStatus === 'Pending Approval' || booking.currentStatus === 'Pending Drop-off' ? (
+                        <>
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                        </>
+                      ) : booking.currentStatus === 'Completed' ? (
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                      ) : (
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-yellow-500"></span>
+                      )}
+                    </span>
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium leading-none">
+                        {booking.isGuest ? 'New Guest Booking' : 'New Repair Booking'}
+                      </p>
+                      <p className="text-sm text-slate-500">
+                        {booking.deviceBrand} {booking.deviceModel} - {booking.currentStatus}
+                      </p>
+                    </div>
+                    <div className="ml-auto font-medium text-sm text-slate-500">
+                      {formatDistanceToNow(new Date(booking.createdAt), { addSuffix: true })}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-sm text-slate-500 text-center py-4">No recent activity found.</div>
+              )}
             </div>
           </CardContent>
         </Card>

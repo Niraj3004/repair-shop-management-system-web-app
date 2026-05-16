@@ -7,6 +7,7 @@ import { REPAIR_STATUS } from "../constants/status";
 import { generateTrackingId } from "../utils/generateTrackingId";
 import { sendEmail, emailTemplates } from "../utils/emailTemplates";
 import { generateInvoicePDF } from "../utils/pdfGenerator";
+import { hashPassword } from "../utils/hash";
 
 export const downloadInvoiceService = async (bookingId: string, userId: string) => {
   const userObj = await User.findById(userId);
@@ -56,6 +57,8 @@ export const createBookingService = async (
     let finalUserId = userId;
     let isWalkIn = false;
     let isGuest = false;
+    let generatedPassword = "";
+    let isNewWalkInAccount = false;
 
     if (!userId && customerDetails) {
       isGuest = true;
@@ -72,6 +75,9 @@ export const createBookingService = async (
       let user = await User.findOne(query).session(session);
 
       if (!user) {
+        generatedPassword = Math.random().toString(36).slice(-8) + "A1!";
+        const hashedPassword = await hashPassword(generatedPassword);
+        
         const userArray = await User.create(
           [
             {
@@ -80,6 +86,7 @@ export const createBookingService = async (
               email: customerDetails.email || `${customerDetails.phone}@wefixit.com`,
               phone: customerDetails.phone || "",
               currentAddress: customerDetails.address || "",
+              password: hashedPassword,
               role: "client",
               isVerified: true,
             },
@@ -87,6 +94,7 @@ export const createBookingService = async (
           { session }
         );
         user = userArray[0] || null;
+        isNewWalkInAccount = true;
       }
       
       if (!user) throw new Error("Failed to create or find customer account");
@@ -146,17 +154,33 @@ export const createBookingService = async (
     if (isGuest && customerDetails) {
       // 1. Send guest notification to Admin
       try {
-        const adminEmail = process.env.ADMIN_EMAIL || "admin@repair.com";
+        const adminEmail = process.env.ADMIN_EMAIL || "infotechevolvix@gmail.com";
         const emailHtml = emailTemplates.adminNewPublicBooking(
           "Admin", // Provide adminName
           customerDetails.firstName || "Guest",
           trackingId,
           customerDetails.email || "N/A",
-          customerDetails.phone || "N/A"
+          customerDetails.phone || "N/A",
+          customerDetails.address || "N/A",
+          deviceType,
+          deviceBrand,
+          deviceModel,
+          issueDescription
         );
-        sendEmail(adminEmail, "New Public Repair Request - WeFixIt", emailHtml).catch((err: any) =>
+        sendEmail(adminEmail, "New Public Repair Request - WeFixIt", emailHtml, undefined, customerDetails.email).catch((err: any) =>
           console.error("Failed to send admin notification email:", err)
         );
+
+        // Send 'Thank you for booking' email to guest
+        if (customerDetails.email) {
+          const guestEmailHtml = emailTemplates.guestBookingSubmittedEmail(
+            customerDetails.firstName || "Guest",
+            `${deviceType} - ${deviceModel}`
+          );
+          sendEmail(customerDetails.email, "Repair Booking Request Received - WeFixIt", guestEmailHtml).catch((err: any) =>
+            console.error("Failed to send guest booking confirmation email:", err)
+          );
+        }
       } catch (err) {
         console.error("Failed to fetch admin email: ", err);
       }
@@ -165,13 +189,43 @@ export const createBookingService = async (
       try {
         const user = await User.findById(finalUserId);
         if (user && user.email && !user.email.endsWith("@wefixit.com")) {
-          const emailHtml = emailTemplates.bookingCreatedEmail(
+          if (isWalkIn && isNewWalkInAccount) {
+            const emailHtml = emailTemplates.customerBookingApproved(
+              user.firstName || "Client",
+              trackingId,
+              user.email,
+              generatedPassword
+            );
+            sendEmail(user.email, "Your Repair Booking & Account Created!", emailHtml).catch((err: any) =>
+              console.error("Failed to send walk-in booking confirmation email:", err)
+            );
+          } else {
+            const emailHtml = emailTemplates.bookingCreatedEmail(
+              user.firstName || "Client",
+              trackingId,
+              `${deviceType} - ${deviceModel}`
+            );
+            sendEmail(user.email, "Repair Booking Confirmed - WeFixIt", emailHtml).catch((err: any) =>
+              console.error("Failed to send booking confirmation email:", err)
+            );
+          }
+
+          // 3. Notify Admin about the registered user's new booking
+          const adminEmail = process.env.ADMIN_EMAIL || "infotechevolvix@gmail.com";
+          const adminHtml = emailTemplates.adminNewPublicBooking(
+            "Admin", 
             user.firstName || "Client",
             trackingId,
-            `${deviceType} - ${deviceModel}`
+            user.email || "N/A",
+            user.phone || "N/A",
+            user.currentAddress || "N/A",
+            deviceType,
+            deviceBrand,
+            deviceModel,
+            issueDescription
           );
-          sendEmail(user.email, "Repair Booking Confirmed - WeFixIt", emailHtml).catch((err: any) =>
-            console.error("Failed to send booking confirmation email:", err)
+          sendEmail(adminEmail, "New Repair Booking - WeFixIt", adminHtml, undefined, user.email).catch((err: any) =>
+            console.error("Failed to send admin notification email:", err)
           );
         }
       } catch (err) {
@@ -207,10 +261,20 @@ export const getBookingByIdService = async (bookingId: string, userId: string) =
   return { ...booking.toObject(), timeline, invoice };
 };
 
-export const getAllBookingsService = async (page: number = 1, limit: number = 10, status?: string) => {
+export const getAllBookingsService = async (page: number = 1, limit: number = 10, status?: string, search?: string) => {
   const query: any = {};
   if (status) {
     query.currentStatus = status;
+  }
+
+  if (search) {
+    query.$or = [
+      { trackingId: { $regex: search, $options: "i" } },
+      { customerFirstName: { $regex: search, $options: "i" } },
+      { customerLastName: { $regex: search, $options: "i" } },
+      { customerEmail: { $regex: search, $options: "i" } },
+      { deviceModel: { $regex: search, $options: "i" } },
+    ];
   }
 
   const skip = (page - 1) * limit;

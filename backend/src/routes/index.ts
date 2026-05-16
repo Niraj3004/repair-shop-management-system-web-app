@@ -8,7 +8,7 @@ import notificationRoutes from "./notification.route";
 import chatbotAIRoutes from "./chatbotAI.route";
 import invoiceRoutes from "./invoice.route";
 import chatRoutes from "./chat.route";
-
+import testimonialRoutes from "./testimonial.route";
 
 const router = Router();
 
@@ -21,6 +21,6 @@ router.use("/notifications", notificationRoutes);
 router.use("/chatbot", chatbotAIRoutes);
 router.use("/invoices", invoiceRoutes);
 router.use("/chat", chatRoutes);
-
+router.use("/testimonials", testimonialRoutes);
 
 export default router;

@@ -17,7 +17,8 @@ import { UploadCloud, X, User, Smartphone } from 'lucide-react';
 const walkInBookingSchema = z.object({
   customerFirstName: z.string().min(1, 'First name is required'),
   customerLastName: z.string().optional(),
-  customerEmail: z.string().email('Invalid email').or(z.literal('')).optional(),
+  customerEmail: z.string().min(1, 'Email is required').email('Invalid email format'),
+  customerAddress: z.string().min(5, 'Contact address is required'),
   customerPhone: z.string().min(10, 'Phone number must be at least 10 digits'),
   deviceType: z.string().min(1, 'Device type is required'),
   deviceBrand: z.string().min(1, 'Brand is required'),
@@ -137,7 +138,7 @@ export default function WalkInBooking() {
               {errors.customerPhone && <p className="text-sm text-red-500">{errors.customerPhone.message}</p>}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="customerEmail">Email Address (Optional)</Label>
+              <Label htmlFor="customerEmail">Email Address</Label>
               <Input
                 id="customerEmail"
                 type="email"
@@ -146,6 +147,16 @@ export default function WalkInBooking() {
                 className={errors.customerEmail ? 'border-red-500' : ''}
               />
               {errors.customerEmail && <p className="text-sm text-red-500">{errors.customerEmail.message}</p>}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="customerAddress">Contact Address</Label>
+              <Input
+                id="customerAddress"
+                placeholder="123 Main St, City"
+                {...register('customerAddress')}
+                className={errors.customerAddress ? 'border-red-500' : ''}
+              />
+              {errors.customerAddress && <p className="text-sm text-red-500">{errors.customerAddress.message}</p>}
             </div>
           </CardContent>
         </Card>

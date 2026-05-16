@@ -12,7 +12,7 @@ import { api } from '@/lib/api';
 export default function PublicBooking() {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [successTrackingId, setSuccessTrackingId] = useState<string | null>(null);
+  const [isSuccess, setIsSuccess] = useState(false);
   const [images, setImages] = useState<File[]>([]);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
 
@@ -55,7 +55,7 @@ export default function PublicBooking() {
         },
       });
 
-      setSuccessTrackingId(response.data.data.trackingId);
+      setIsSuccess(true);
       toast.success(response.data.message);
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to submit booking request');
@@ -64,7 +64,7 @@ export default function PublicBooking() {
     }
   };
 
-  if (successTrackingId) {
+  if (isSuccess) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full mx-auto text-center space-y-8">
@@ -75,13 +75,8 @@ export default function PublicBooking() {
               Your repair request has been successfully sent to our technicians. We will review it shortly.
             </p>
             
-            <div className="bg-slate-50 rounded-xl p-4 mb-8">
-              <p className="text-sm text-slate-500 font-medium uppercase tracking-wider mb-1">Your Tracking ID</p>
-              <p className="text-3xl font-bold text-blue-600 tracking-widest">{successTrackingId}</p>
-            </div>
-
             <p className="text-sm text-slate-500 mb-8">
-              You will receive an email once your request is approved containing your login credentials to track your repair.
+              You will receive an email containing your tracking ID and login credentials once your request is approved.
             </p>
 
             <Button onClick={() => navigate('/')} className="w-full" size="lg">

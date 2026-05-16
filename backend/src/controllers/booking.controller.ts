@@ -44,10 +44,15 @@ export const createBooking = catchAsyncError(async (req: IExtendRequest, res: Re
   if (files && files.length > 0) {
     for (const file of files) {
       if (process.env.CLOUDINARY_API_KEY === "your_api_key" || !process.env.CLOUDINARY_API_KEY) {
-        // Fallback for local development without Cloudinary
-        console.log("Cloudinary not configured, using placeholder image.");
-        imageUrls.push(`https://res.cloudinary.com/demo/image/upload/v1312461204/sample.jpg`);
-        continue;
+        if (process.env.NODE_ENV === "development") {
+          // Fallback for local development without Cloudinary
+          console.log("Cloudinary not configured, using placeholder image.");
+          imageUrls.push(`https://res.cloudinary.com/demo/image/upload/v1312461204/sample.jpg`);
+          continue;
+        } else {
+          res.status(STATUS_CODES.INTERNAL_SERVER_ERROR);
+          throw new Error("Cloudinary configuration missing in production.");
+        }
       }
       const b64 = Buffer.from(file.buffer).toString("base64");
       let dataURI = "data:" + file.mimetype + ";base64," + b64;
@@ -59,6 +64,13 @@ export const createBooking = catchAsyncError(async (req: IExtendRequest, res: Re
   }
 
   let customerDetails = undefined;
+  if (!userId) {
+    if (!customerFirstName || (!customerEmail && !customerPhone)) {
+      res.status(STATUS_CODES.BAD_REQUEST);
+      throw new Error("Guest bookings require a first name and either an email or phone number.");
+    }
+  }
+
   if (!userId || (userRole === 'admin' && customerPhone)) {
     customerDetails = {
       firstName: customerFirstName,
@@ -79,10 +91,15 @@ export const createBooking = catchAsyncError(async (req: IExtendRequest, res: Re
     customerDetails
   );
 
+  const responseBooking: any = booking.toObject();
+  if (!userId) {
+    delete responseBooking.trackingId;
+  }
+
   res.status(STATUS_CODES.CREATED).json({
     success: true,
     message: "Booking created successfully",
-    data: booking,
+    data: responseBooking,
   });
 });
 
@@ -110,8 +127,9 @@ export const getAllBookings = catchAsyncError(async (req: Request, res: Response
   const page = parseInt(req.query.page as string) || 1;
   const limit = parseInt(req.query.limit as string) || 10;
   const status = req.query.status as string;
+  const search = req.query.search as string;
 
-  const result = await bookingService.getAllBookingsService(page, limit, status);
+  const result = await bookingService.getAllBookingsService(page, limit, status, search);
 
   res.status(STATUS_CODES.OK).json({
     success: true,

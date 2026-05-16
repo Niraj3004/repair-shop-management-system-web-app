@@ -5,7 +5,8 @@ export const sendEmail = async (
   to: string,
   subject: string,
   html: string,
-  attachmentPath?: string
+  attachmentPath?: string,
+  replyTo?: string
 ): Promise<void> => {
   try {
     const transporter = nodemailer.createTransport({
@@ -22,6 +23,7 @@ export const sendEmail = async (
       subject,
       html,
       attachments: attachmentPath ? [{ path: attachmentPath }] : [],
+      replyTo: replyTo || undefined,
     });
   } catch (error) {
     console.error("Error sending email:", error);
@@ -160,6 +162,23 @@ export const emailTemplates = {
     <p>If you selected drop-off, please bring your device to our service center. If you selected pickup, our team will coordinate with you shortly.</p>`
   ),
 
+  guestBookingSubmittedEmail: (name: string, deviceName: string) => baseEmailTemplate(
+    "Repair Booking Request Received",
+    `<h2>Thank You for Your Booking Request! 🛠️</h2>
+    <p>Hello <strong>${name}</strong>,</p>
+    <p>We have successfully received your repair request for your <strong>${deviceName}</strong>.</p>
+    <p>Your request has been sent to our technicians for review and approval.</p>
+    
+    <div class="highlight-box" style="border-left-color: #198754;">
+      <p style="color: #198754;">What happens next?</p>
+      <p style="margin-top: 16px; font-size: 14px; text-transform: none; color: #495057; font-weight: normal;">
+        Once our admin approves your request, you will receive another email containing your official <strong>Tracking ID</strong> and your automatically generated <strong>Login Credentials</strong>. You can use those to track the live status of your repair.
+      </p>
+    </div>
+
+    <p>If we have any questions regarding your device, we will contact you shortly.</p>`
+  ),
+
   customAnnouncementEmail: (name: string, title: string, message: string) => baseEmailTemplate(
     title,
     `<h2>${title}</h2>
@@ -169,7 +188,7 @@ export const emailTemplates = {
     <p>If you have any questions, feel free to reply directly to this email or contact our support team.</p>`
   ),
 
-  adminNewPublicBooking: (adminName: string, customerName: string, trackingId: string, email: string, phone: string) => baseEmailTemplate(
+  adminNewPublicBooking: (adminName: string, customerName: string, trackingId: string, email: string, phone: string, address: string, deviceType: string, deviceBrand: string, deviceModel: string, issueDescription: string) => baseEmailTemplate(
     "New Public Booking Request Pending Approval",
     `<h2>New Public Booking Request! 📬</h2>
     <p>Hello <strong>${adminName}</strong>,</p>
@@ -181,6 +200,13 @@ export const emailTemplates = {
       <p>Customer Details</p>
       <p style="margin:0; font-size:16px;"><strong>Email:</strong> ${email}</p>
       <p style="margin:0; font-size:16px;"><strong>Phone:</strong> ${phone}</p>
+      <p style="margin:0; font-size:16px;"><strong>Address:</strong> ${address}</p>
+      <br/>
+      <p>Device Details</p>
+      <p style="margin:0; font-size:16px;"><strong>Type:</strong> ${deviceType}</p>
+      <p style="margin:0; font-size:16px;"><strong>Brand:</strong> ${deviceBrand}</p>
+      <p style="margin:0; font-size:16px;"><strong>Model:</strong> ${deviceModel}</p>
+      <p style="margin:0; font-size:16px;"><strong>Issue:</strong> ${issueDescription}</p>
     </div>
 
     <p>Please log in to your admin dashboard to review, approve, or reject this request.</p>

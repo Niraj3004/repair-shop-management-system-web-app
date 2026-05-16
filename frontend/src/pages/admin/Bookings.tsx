@@ -49,30 +49,39 @@ const statusColors: Record<string, string> = {
 
 export default function AdminBookings() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [page, setPage] = useState(1);
+  const limit = 10;
 
-  const { data: bookings, isLoading } = useQuery<Booking[]>({
-    queryKey: ['admin-bookings'],
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+      setPage(1); // Reset to first page on search
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  React.useEffect(() => {
+    setPage(1);
+  }, [statusFilter]);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['admin-bookings', page, limit, statusFilter, debouncedSearch],
     queryFn: async () => {
-      const res = await api.get('/admin/bookings');
-      return res.data.data;
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
+        ...(statusFilter !== 'All' && { status: statusFilter }),
+        ...(debouncedSearch && { search: debouncedSearch }),
+      });
+      const res = await api.get(`/admin/bookings?${params.toString()}`);
+      return res.data;
     },
   });
 
-  const filteredBookings = bookings?.filter(booking => {
-    const custFirst = booking.isGuest ? (booking.customerFirstName || '') : (booking.user?.firstName || '');
-    const custLast = booking.isGuest ? (booking.customerLastName || '') : (booking.user?.lastName || '');
-    
-    const matchesSearch = 
-      booking.trackingId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      custFirst.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      custLast.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      booking.deviceModel.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = statusFilter === 'All' || booking.currentStatus === statusFilter;
-
-    return matchesSearch && matchesStatus;
-  }) || [];
+  const bookings = data?.data || [];
+  const totalPages = data?.totalPages || 1;
 
   return (
     <div className="space-y-6">
@@ -136,14 +145,14 @@ export default function AdminBookings() {
                   </div>
                 </TableCell>
               </TableRow>
-            ) : filteredBookings.length === 0 ? (
+            ) : bookings.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="h-24 text-center text-slate-500">
                   No bookings found matching your criteria.
                 </TableCell>
               </TableRow>
             ) : (
-              filteredBookings.map((booking) => (
+              bookings.map((booking: Booking) => (
                 <TableRow key={booking._id} className="hover:bg-slate-50">
                   <TableCell className="font-medium font-mono text-sm">
                     {booking.trackingId}
@@ -210,6 +219,30 @@ export default function AdminBookings() {
             )}
           </TableBody>
         </Table>
+      </div>
+
+      <div className="flex justify-between items-center bg-white p-4 rounded-lg border shadow-sm">
+        <div className="text-sm text-slate-500">
+          Showing page {page} of {totalPages} ({data?.total || 0} total records)
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+          >
+            Previous
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page >= totalPages}
+          >
+            Next
+          </Button>
+        </div>
       </div>
     </div>
   );

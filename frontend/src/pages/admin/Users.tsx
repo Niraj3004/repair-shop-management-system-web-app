@@ -35,14 +35,33 @@ interface User {
 export default function AdminUsers() {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const limit = 10;
 
-  const { data: users, isLoading } = useQuery<User[]>({
-    queryKey: ['admin-users'],
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+      setPage(1); // Reset to first page on search
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['admin-users', page, limit, debouncedSearch],
     queryFn: async () => {
-      const res = await api.get('/admin/users');
-      return res.data.data || res.data; // Fallback in case it's already an array
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
+        ...(debouncedSearch && { search: debouncedSearch }),
+      });
+      const res = await api.get(`/admin/users?${params.toString()}`);
+      return res.data;
     },
   });
+
+  const users = data?.data || [];
+  const totalPages = data?.totalPages || 1;
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -63,11 +82,7 @@ export default function AdminUsers() {
     }
   };
 
-  const filteredUsers = users?.filter(user => 
-    user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+
 
   return (
     <div className="space-y-6">
@@ -109,14 +124,14 @@ export default function AdminUsers() {
                   </div>
                 </TableCell>
               </TableRow>
-            ) : filteredUsers.length === 0 ? (
+            ) : users.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="h-24 text-center text-slate-500">
                   No users found.
                 </TableCell>
               </TableRow>
             ) : (
-              filteredUsers.map((user) => (
+              users.map((user: User) => (
                 <TableRow key={user._id}>
                   <TableCell className="font-medium">
                     {user.firstName} {user.lastName}
@@ -156,6 +171,30 @@ export default function AdminUsers() {
             )}
           </TableBody>
         </Table>
+      </div>
+
+      <div className="flex justify-between items-center bg-white p-4 rounded-lg border shadow-sm">
+        <div className="text-sm text-slate-500">
+          Showing page {page} of {totalPages} ({data?.total || 0} total records)
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+          >
+            Previous
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page >= totalPages}
+          >
+            Next
+          </Button>
+        </div>
       </div>
     </div>
   );

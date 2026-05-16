@@ -39,6 +39,34 @@ export const getDashboardStatsService = async () => {
     .sort({ createdAt: -1 })
     .limit(5);
 
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6); // 7 days including today
+  sevenDaysAgo.setHours(0, 0, 0, 0);
+
+  const bookingsPerDay = await Booking.aggregate([
+    { $match: { createdAt: { $gte: sevenDaysAgo } } },
+    {
+      $group: {
+        _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+        count: { $sum: 1 },
+      },
+    },
+  ]);
+
+  const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const chartData = [];
+  
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const dateString = d.toISOString().split('T')[0];
+    const found = bookingsPerDay.find(b => b._id === dateString);
+    chartData.push({
+      name: daysOfWeek[d.getDay()],
+      bookings: found ? found.count : 0
+    });
+  }
+
   return {
     totalUsers,
     totalBookings,
@@ -46,14 +74,33 @@ export const getDashboardStatsService = async () => {
     completedBookings,
     totalRevenue,
     recentBookings,
+    chartData,
   };
 };
 
-export const getAllUsersService = async () => {
-  const users = await User.find({ role: { $ne: "admin" } })
+export const getAllUsersService = async (page: number = 1, limit: number = 10, search?: string) => {
+  const query: any = { role: { $ne: "admin" } };
+
+  if (search) {
+    query.$or = [
+      { firstName: { $regex: search, $options: "i" } },
+      { lastName: { $regex: search, $options: "i" } },
+      { email: { $regex: search, $options: "i" } },
+      { phone: { $regex: search, $options: "i" } },
+    ];
+  }
+
+  const skip = (page - 1) * limit;
+
+  const users = await User.find(query)
     .select("-password")
-    .sort({ createdAt: -1 });
-  return users;
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit);
+
+  const total = await User.countDocuments(query);
+
+  return { users, total, page, limit, totalPages: Math.ceil(total / limit) };
 };
 
 export const deleteUserService = async (userId: string) => {

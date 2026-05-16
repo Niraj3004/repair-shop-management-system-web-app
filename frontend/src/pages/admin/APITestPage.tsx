@@ -46,7 +46,7 @@ const ENDPOINT_GROUPS: EndpointGroup[] = [
     endpoints: [
       { method: 'GET', url: '/booking', description: 'Get all my bookings' },
       { method: 'GET', url: '/booking/BOOKING_ID_HERE', description: 'Get a single booking by ID', note: 'Replace BOOKING_ID_HERE with a real ID' },
-      { method: 'POST', url: '/booking', description: 'Create a booking (no file upload via this tester)', sampleBody: '{"deviceType":"smartphone","deviceModel":"iPhone 13","issueDescription":"Cracked screen"}' },
+      { method: 'POST', url: '/booking', description: 'Create a booking (no file upload via this tester)', sampleBody: '{"deviceType":"smartphone","deviceBrand":"Apple","deviceModel":"iPhone 13","issueDescription":"Cracked screen"}' },
     ],
   },
   {
@@ -54,6 +54,18 @@ const ENDPOINT_GROUPS: EndpointGroup[] = [
     color: 'teal',
     endpoints: [
       { method: 'GET', url: '/tracking/WFX-XXXXXXXX', description: 'Track repair by tracking ID (public)', note: 'Replace WFX-XXXXXXXX with a real tracking ID' },
+    ],
+  },
+  {
+    label: '🌍 Public Booking (Guest)',
+    color: 'indigo',
+    endpoints: [
+      { 
+        method: 'POST', 
+        url: '/booking', 
+        description: 'Create a booking as a guest (Public)', 
+        sampleBody: '{"deviceType":"smartphone","deviceBrand":"Apple","deviceModel":"iPhone 13","issueDescription":"Cracked screen and battery draining fast","customerFirstName":"John","customerLastName":"Doe","customerEmail":"johndoe@example.com","customerPhone":"9800000000","customerAddress":"Kathmandu, Nepal"}' 
+      },
     ],
   },
   {
@@ -110,6 +122,17 @@ const ENDPOINT_GROUPS: EndpointGroup[] = [
       { method: 'POST', url: '/admin/invoice', description: 'Generate invoice for a booking', sampleBody: '{"bookingId":"BOOKING_ID_HERE"}' },
       { method: 'PUT', url: '/admin/invoice/INVOICE_ID_HERE/verify', description: 'Verify payment', note: 'Replace INVOICE_ID_HERE' },
       { method: 'POST', url: '/admin/send-notification', description: 'Send notification to user', sampleBody: '{"userId":"USER_ID_HERE","title":"Update","message":"Your device is ready!","type":"success"}' },
+    ],
+  },
+  {
+    label: '⭐ Testimonials',
+    color: 'yellow',
+    endpoints: [
+      { method: 'POST', url: '/testimonials', description: 'Submit a new testimonial', sampleBody: '{"name":"John Doe","message":"Great service, fixed my phone fast!","rating":5}' },
+      { method: 'GET', url: '/testimonials', description: 'Get all approved testimonials (Public)' },
+      { method: 'GET', url: '/testimonials/admin', description: 'Get all testimonials (Admin)' },
+      { method: 'PUT', url: '/testimonials/admin/TESTIMONIAL_ID_HERE', description: 'Update testimonial status', sampleBody: '{"status":"approved"}', note: 'Replace TESTIMONIAL_ID_HERE' },
+      { method: 'DELETE', url: '/testimonials/admin/TESTIMONIAL_ID_HERE', description: 'Delete a testimonial', note: 'Replace TESTIMONIAL_ID_HERE' },
     ],
   },
 ];

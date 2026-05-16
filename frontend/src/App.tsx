@@ -23,6 +23,7 @@ import Invoices from '@/pages/dashboard/Invoices';
 import Notifications from '@/pages/dashboard/Notifications';
 import AIAssistant from '@/pages/dashboard/AIAssistant';
 import ClientSupport from '@/pages/dashboard/Support';
+import SubmitTestimonial from '@/pages/dashboard/Testimonials';
 
 // Admin Pages
 import AdminDashboard from '@/pages/admin/Dashboard';
@@ -34,7 +35,7 @@ import AdminInvoices from '@/pages/admin/Invoices';
 import SendNotification from '@/pages/admin/SendNotification';
 import APITestPage from '@/pages/admin/APITestPage';
 import WalkInBooking from '@/pages/admin/WalkInBooking';
-
+import AdminTestimonials from '@/pages/admin/Testimonials';
 
 // Layouts
 import PublicLayout from '@/layouts/PublicLayout';
@@ -81,6 +82,7 @@ export default function App() {
             <Route path="/dashboard/notifications" element={<Notifications />} />
             <Route path="/dashboard/support" element={<ClientSupport />} />
             <Route path="/dashboard/ai-assistant" element={<AIAssistant />} />
+            <Route path="/dashboard/testimonials" element={<SubmitTestimonial />} />
           </Route>
 
           {/* Admin Dashboard Routes */}
@@ -94,7 +96,7 @@ export default function App() {
             <Route path="/admin/send-notification" element={<SendNotification />} />
             <Route path="/admin/api-tester" element={<APITestPage />} />
             <Route path="/admin/walk-in-booking" element={<WalkInBooking />} />
-
+            <Route path="/admin/testimonials" element={<AdminTestimonials />} />
           </Route>
 
           {/* Fallback */}

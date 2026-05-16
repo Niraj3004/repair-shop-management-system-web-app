@@ -16,8 +16,20 @@ export const getDashboardStats = catchAsyncError(async (req: Request, res: Respo
 });
 
 export const getAllUsers = catchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
-  const users = await adminService.getAllUsersService();
-  res.status(STATUS_CODES.OK).json({ success: true, count: users.length, data: users });
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 10;
+  const search = req.query.search as string;
+
+  const result = await adminService.getAllUsersService(page, limit, search);
+  
+  res.status(STATUS_CODES.OK).json({ 
+    success: true, 
+    count: result.users.length, 
+    total: result.total,
+    totalPages: result.totalPages,
+    currentPage: result.page,
+    data: result.users 
+  });
 });
 
 export const deleteUser = catchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
@@ -31,8 +43,9 @@ export const getAllBookings = catchAsyncError(async (req: Request, res: Response
   const page = parseInt(req.query.page as string) || 1;
   const limit = parseInt(req.query.limit as string) || 10;
   const status = req.query.status ? String(req.query.status) : undefined;
+  const search = req.query.search as string;
 
-  const result = await bookingService.getAllBookingsService(page, limit, status);
+  const result = await bookingService.getAllBookingsService(page, limit, status, search);
 
   res.status(STATUS_CODES.OK).json({
     success: true,
