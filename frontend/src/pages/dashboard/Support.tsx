@@ -87,7 +87,9 @@ export default function Support() {
     newSocket.on('newMessage', (message: Message) => {
       setMessages((prev) => {
         if (prev.some(m => m._id === message._id)) return prev;
-        return [...prev, message];
+        // Remove optimistic message if it matches this incoming one
+        const filteredPrev = prev.filter(m => !(m._id.startsWith('temp-') && m.content === message.content));
+        return [...filteredPrev, message];
       });
       scrollToBottom();
       if (adminId) markReadMutation.mutate(adminId);
@@ -131,20 +133,10 @@ export default function Support() {
       };
 
       socket.emit('sendMessage', messageData);
-      
-      // Optimistic update
-      const optimisticMsg: Message = {
-        _id: `temp-${Date.now()}`,
-        senderId: user!._id,
-        receiverId: adminId,
-        content: newMessage,
-        createdAt: new Date().toISOString(),
-        isRead: false
-      };
-      
-      setMessages((prev) => [...prev, optimisticMsg]);
       setNewMessage('');
-      scrollToBottom();
+      // Note: We don't do optimistic update here because the backend 
+      // explicitly emits 'newMessage' back to the sender.
+      // Doing optimistic update causes duplicate message bugs.
     } catch (err) {
       console.error('Failed to emit message:', err);
     }
