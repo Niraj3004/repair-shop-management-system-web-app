@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,10 +11,39 @@ import { api } from '@/lib/api';
 
 export default function PublicBooking() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [images, setImages] = useState<File[]>([]);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
+
+  // Parse URL query parameters
+  const queryParams = new URLSearchParams(location.search);
+  const deviceParam = queryParams.get('device') || '';
+  const serviceParam = queryParams.get('service') || '';
+
+  // Smart Parser for Brand, Model & Device Type
+  let parsedBrand = '';
+  let parsedModel = deviceParam;
+  let parsedType = '';
+
+  if (deviceParam) {
+    const parts = deviceParam.trim().split(/\s+/);
+    parsedBrand = parts[0] || '';
+    
+    const lowerDevice = deviceParam.toLowerCase();
+    if (lowerDevice.includes('iphone') || lowerDevice.includes('samsung') || lowerDevice.includes('phone') || lowerDevice.includes('mi ') || lowerDevice.includes('redmi') || lowerDevice.includes('pixel')) {
+      parsedType = 'Phone';
+    } else if (lowerDevice.includes('macbook') || lowerDevice.includes('laptop') || lowerDevice.includes('dell') || lowerDevice.includes('thinkpad') || lowerDevice.includes('hp ') || lowerDevice.includes('asus')) {
+      parsedType = 'Laptop';
+    } else if (lowerDevice.includes('ipad') || lowerDevice.includes('tablet')) {
+      parsedType = 'Tablet';
+    } else if (lowerDevice.includes('watch') || lowerDevice.includes('gears')) {
+      parsedType = 'Smartwatch';
+    } else {
+      parsedType = 'Other';
+    }
+  }
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -143,15 +172,15 @@ export default function PublicBooking() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="deviceType">Device Type <span className="text-red-500">*</span></Label>
-                    <Input id="deviceType" name="deviceType" required placeholder="Phone, Laptop..." />
+                    <Input id="deviceType" name="deviceType" required defaultValue={parsedType} placeholder="Phone, Laptop..." />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="deviceBrand">Brand <span className="text-red-500">*</span></Label>
-                    <Input id="deviceBrand" name="deviceBrand" required placeholder="Apple, Samsung..." />
+                    <Input id="deviceBrand" name="deviceBrand" required defaultValue={parsedBrand} placeholder="Apple, Samsung..." />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="deviceModel">Model <span className="text-red-500">*</span></Label>
-                    <Input id="deviceModel" name="deviceModel" required placeholder="iPhone 13 Pro" />
+                    <Input id="deviceModel" name="deviceModel" required defaultValue={parsedModel} placeholder="iPhone 13 Pro" />
                   </div>
                 </div>
                 
@@ -161,6 +190,7 @@ export default function PublicBooking() {
                     id="issueDescription" 
                     name="issueDescription" 
                     required 
+                    defaultValue={serviceParam ? `Requested Repair: ${serviceParam}` : ''}
                     placeholder="Describe the problem you are experiencing with your device..."
                     className="min-h-[100px]"
                   />

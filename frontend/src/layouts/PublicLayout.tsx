@@ -18,6 +18,7 @@ export default function PublicLayout() {
           <nav className="hidden md:flex items-center gap-6">
             <Link to="/" className="text-slate-600 hover:text-blue-600 font-medium transition-colors">Home</Link>
             <Link to="/about" className="text-slate-600 hover:text-blue-600 font-medium transition-colors">About Us</Link>
+            <Link to="/pricing" className="text-slate-600 hover:text-blue-600 font-medium transition-colors">Pricing</Link>
             <Link to="/contact" className="text-slate-600 hover:text-blue-600 font-medium transition-colors">Contact</Link>
             <Link to="/track" className="text-slate-600 hover:text-blue-600 font-medium transition-colors">Track Repair</Link>
           </nav>
@@ -62,6 +63,7 @@ export default function PublicLayout() {
             <ul className="space-y-2 text-sm">
               <li><Link to="/" className="hover:text-white transition-colors">Home</Link></li>
               <li><Link to="/about" className="hover:text-white transition-colors">About Us</Link></li>
+              <li><Link to="/pricing" className="hover:text-white transition-colors">Pricing</Link></li>
               <li><Link to="/contact" className="hover:text-white transition-colors">Contact Us</Link></li>
               <li><Link to="/track" className="hover:text-white transition-colors">Track Repair</Link></li>
               <li><Link to="/login" className="hover:text-white transition-colors">Login</Link></li>

@@ -15,6 +15,7 @@ import TrackRepair from '@/pages/TrackRepair';
 import PublicBooking from '@/pages/PublicBooking';
 import AboutUs from '@/pages/AboutUs';
 import ContactUs from '@/pages/ContactUs';
+import Pricing from '@/pages/Pricing';
 
 // Client Dashboard Pages
 import Dashboard from '@/pages/dashboard/Dashboard';
@@ -38,6 +39,7 @@ import SendNotification from '@/pages/admin/SendNotification';
 import APITestPage from '@/pages/admin/APITestPage';
 import WalkInBooking from '@/pages/admin/WalkInBooking';
 import AdminTestimonials from '@/pages/admin/Testimonials';
+import PricingManager from '@/pages/admin/PricingManager';
 
 // Layouts
 import PublicLayout from '@/layouts/PublicLayout';
@@ -74,6 +76,7 @@ export default function App() {
             <Route path="/public-booking" element={<PublicBooking />} />
             <Route path="/about" element={<AboutUs />} />
             <Route path="/contact" element={<ContactUs />} />
+            <Route path="/pricing" element={<Pricing />} />
           </Route>
 
           {/* Client Dashboard Routes */}
@@ -101,6 +104,7 @@ export default function App() {
             <Route path="/admin/api-tester" element={<APITestPage />} />
             <Route path="/admin/walk-in-booking" element={<WalkInBooking />} />
             <Route path="/admin/testimonials" element={<AdminTestimonials />} />
+            <Route path="/admin/pricing" element={<PricingManager />} />
           </Route>
 
           {/* Fallback */}

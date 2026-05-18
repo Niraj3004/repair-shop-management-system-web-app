@@ -17,7 +17,8 @@ import {
   FileText,
   Send,
   Terminal,
-  Globe
+  Globe,
+  Tag
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -57,6 +58,7 @@ export default function AdminLayout() {
     { name: 'Invoices', path: '/admin/invoices', icon: <FileText className="w-5 h-5" /> },
     { name: 'Testimonials', path: '/admin/testimonials', icon: <MessageSquare className="w-5 h-5" /> },
     { name: 'Walk-in Booking', path: '/admin/walk-in-booking', icon: <Wrench className="w-5 h-5" /> },
+    { name: 'Pricing Management', path: '/admin/pricing', icon: <Tag className="w-5 h-5" /> },
     { 
       name: 'Support Chat', 
       path: '/admin/support', 
