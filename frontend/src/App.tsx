@@ -13,6 +13,8 @@ import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
 import TrackRepair from '@/pages/TrackRepair';
 import PublicBooking from '@/pages/PublicBooking';
+import AboutUs from '@/pages/AboutUs';
+import ContactUs from '@/pages/ContactUs';
 
 // Client Dashboard Pages
 import Dashboard from '@/pages/dashboard/Dashboard';
@@ -70,6 +72,8 @@ export default function App() {
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/track" element={<TrackRepair />} />
             <Route path="/public-booking" element={<PublicBooking />} />
+            <Route path="/about" element={<AboutUs />} />
+            <Route path="/contact" element={<ContactUs />} />
           </Route>
 
           {/* Client Dashboard Routes */}

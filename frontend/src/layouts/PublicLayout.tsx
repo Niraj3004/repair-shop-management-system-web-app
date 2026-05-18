@@ -16,8 +16,10 @@ export default function PublicLayout() {
           </Link>
           
           <nav className="hidden md:flex items-center gap-6">
-            <Link to="/" className="text-slate-600 hover:text-blue-600 font-medium">Home</Link>
-            <Link to="/track" className="text-slate-600 hover:text-blue-600 font-medium">Track Repair</Link>
+            <Link to="/" className="text-slate-600 hover:text-blue-600 font-medium transition-colors">Home</Link>
+            <Link to="/about" className="text-slate-600 hover:text-blue-600 font-medium transition-colors">About Us</Link>
+            <Link to="/contact" className="text-slate-600 hover:text-blue-600 font-medium transition-colors">Contact</Link>
+            <Link to="/track" className="text-slate-600 hover:text-blue-600 font-medium transition-colors">Track Repair</Link>
           </nav>
 
           <div className="flex items-center gap-4">
@@ -58,9 +60,11 @@ export default function PublicLayout() {
           <div>
             <h3 className="text-white font-semibold mb-4">Quick Links</h3>
             <ul className="space-y-2 text-sm">
-              <li><Link to="/" className="hover:text-white">Home</Link></li>
-              <li><Link to="/track" className="hover:text-white">Track Repair</Link></li>
-              <li><Link to="/login" className="hover:text-white">Login</Link></li>
+              <li><Link to="/" className="hover:text-white transition-colors">Home</Link></li>
+              <li><Link to="/about" className="hover:text-white transition-colors">About Us</Link></li>
+              <li><Link to="/contact" className="hover:text-white transition-colors">Contact Us</Link></li>
+              <li><Link to="/track" className="hover:text-white transition-colors">Track Repair</Link></li>
+              <li><Link to="/login" className="hover:text-white transition-colors">Login</Link></li>
             </ul>
           </div>
           <div>

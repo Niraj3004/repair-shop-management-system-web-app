@@ -244,4 +244,22 @@ export const emailTemplates = {
     <p>Unfortunately, we are unable to process or approve your request at this time. This may be due to unavailable parts or a service we currently do not offer.</p>
     <p>If you believe this is a mistake or would like more details, please contact our support team.</p>`
   ),
+
+  contactUsMessage: (name: string, email: string, subject: string, message: string) => baseEmailTemplate(
+    "New Contact Us Message",
+    `<h2>New Message Received 📬</h2>
+    <p>A new message has been submitted via the Contact Us form on your website.</p>
+    
+    <div class="highlight-box">
+      <p>Sender Details</p>
+      <p style="margin:0; font-size:16px;"><strong>Name:</strong> ${name}</p>
+      <p style="margin:0; font-size:16px;"><strong>Email:</strong> ${email}</p>
+      <br/>
+      <p>Message Details</p>
+      <p style="margin:0; font-size:16px;"><strong>Subject:</strong> ${subject}</p>
+      <p style="margin-top:8px; font-size:16px; white-space: pre-wrap; background: #ffffff; padding: 12px; border-radius: 4px; border: 1px solid #e9ecef;">${message}</p>
+    </div>
+
+    <p>Please reply to the customer directly at <strong>${email}</strong>.</p>`
+  ),
 };
